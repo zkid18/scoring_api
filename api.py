@@ -51,7 +51,7 @@ GENDERS = {
 # Maybe we neeed to inherint from  class other than object
 # Can we step back from the template
 
-class BaseFiled(object):
+class BaseField(object):
     def __init__(self, required, nullable, name):
         self.required = required
         self.nullable = nullable
@@ -75,14 +75,12 @@ class BaseFiled(object):
         2. Check field for requirement property
         3. Check field for correct formati representation
         '''
-        if ((not self.nullable) and (value == '')):
-            # AttributeError("{} is nullable".format(self.name))
-            logging.error("{} nullable".format(self.name))
+        if ((not self.nullable) and (self.value == '')):
+            logging.exception("{} nullable".format(self.name))
             return False
         
-        elif (self.required) and (value == None):
-            # AttributeError("{} is required".format(self.name))
-            logging.error("{} is nullable".format(self.name))
+        elif (self.required) and (self.value == None):
+            logging.exception("{} is nullable".format(self.name))
             return False
 
         elif self._is_wrong_type:
@@ -90,39 +88,21 @@ class BaseFiled(object):
 
         return True
 
-class CharField(object):
-    def __init__(self,required, nullable, name):
-        self.required = required
-        self.nullable = nullable
-        self._value = None
-        self._is_wrong_type = False
-        self.name = name
-
+class CharField(BaseField):
+    def __init__(self, required, nullable, name):
+        super().__init__(required, nullable, name)
+    
     @property
     def value(self):
-        return self._value
+        return super().value
 
-    @property 
+    @property
     def is_exist(self):
-        return self._value != None
+        return super().is_exist
 
     @property
     def is_valid(self):
-        if ((not self.nullable) and (value == '')):
-            AttributeError("{} is nullable".format(self.name))
-            logging.error("{} nullable".format(self.name))
-            return False
-        
-        elif (self.required) and (value == None):
-            AttributeError("{} is required".format(self.name))
-            logging.error("{} is nullable".format(self.name))
-            return False
-
-        elif self._is_wrong_type:
-            return False
-
-        else:
-            return True
+        return super().is_valid
     
     @value.setter
     def value(self, value):
@@ -130,26 +110,24 @@ class CharField(object):
             self._value = value
         else:
             self._is_wrong_type = True
-            AttributeError("{} is wrong type".format(self.name))
-            logging.error("{} is wrong type".format(self.name))
-
+            logging.exception("{} is wrong type".format(self.name))
+            raise KeyError('Wrong type of {}'.format(self.name))
 
 class ArgumentsField(object):
     def __init__(self,required, nullable):
-        self._argument_dict = None
+        self._value = None
         self.required = required
         self.nullable = nullable
         self.name = 'arguments'
 
     @property
-    def argument_dict(self):
-        return self._argument_dict
+    def value(self):
+        return self._value
     
-    @argument_dict.setter
-    def argument_dict(self, argument_dict):
-        self._argument_dict = argument_dict
+    @value.setter
+    def value(self, value):
+        self._value = value
     
-
 
 class EmailField(CharField):
     def __init__(self,required, nullable):
@@ -170,204 +148,156 @@ class EmailField(CharField):
     @value.setter
     def value(self, value):
         if '@' not in value:
-            # NameError('Not a valid email name')
             self._is_wrong_type = True
-            logging.error("Email {} is not valid".format(self.name))
-        else:
-            super(EmailField, EmailField).value.__set__(self, value)
-        
-
-class PhoneField(object):
-    def __init__(self, required, nullable):
-        self._value = None
-        self.required = required
-        self.nullable = nullable
-        self.name = 'phone'
-        self._is_wrong_type = False
-
-    
-    @property
-    def value(self):
-        return self._value
-    
-    @property 
-    def is_exist(self):
-        return self._value != None
-
-    @property
-    def is_valid(self):
-        if ((not self.nullable) and (value == '')):
-            AttributeError("{} is nullable".format(self.name))
-            logging.error("{} nullable".format(self.name))
-            return False
-        
-        elif (self.required) and (value == None):
-            AttributeError("{} is required".format(self.name))
-            logging.error("{} is nullable".format(self.name))
-            return False
-        
-        elif self._is_wrong_type:
-            return False
-
-        else:
-            return True
-    
-    @value.setter
-    def value(self, value):
-        if (len(str(value)) != 11) and (str(value)[0]) != 7:
-            self._is_wrong_type = True
-            # NameError('Not a valid phone name')
-            logging.error("Phone {} is not valid".format(value))
+            logging.exception("Email {} is not valid".format(self.name))
+            raise KeyError('Wrong type of {}'.format(self.name))
         else:
             self._value = value
+            #super(EmailField, EmailField).value.__set__(self, value)
+        
 
-
-class DateField(object):
+class PhoneField(BaseField):
     def __init__(self, required, nullable):
-        self._value = None
-        self.required = required
-        self.nullable = nullable
-        self.name = 'date'
+        name = 'phone'
+        super().__init__(required, nullable, name)
 
-
-class BirthDayField(object):
-    # can be inherite from DateFiled
-    def __init__(self,required, nullable):
-        self._value = None
-        self.required = required
-        self.nullable = nullable
-        self.name = 'birthday'
-        self._is_wrong_type = False
-    
     @property
     def value(self):
-        return self._value
-
+        return super().value
+    
     @property 
     def is_exist(self):
-        return self._value != None
+        return super().is_exist
     
     @property
     def is_valid(self):
-        if ((not self.nullable) and (value == '')):
-            AttributeError("{} is nullable".format(self.name))
-            logging.error("{} nullable".format(self.name))
-            return False
-        
-        elif (self.required) and (value == None):
-            AttributeError("{} is required".format(self.name))
-            logging.error("{} is nullable".format(self.name))
-            return False
-        
-        elif self._is_wrong_type:
-            return False
-        
+        return super().is_valid
+
+    @value.setter
+    def value(self, value):
+        if (len(str(value)) == 11) and (str(value)[0]) == '7':
+            self._value = value
         else:
-            return True
+            self._is_wrong_type = True
+            logging.exception("Phone {} is not valid".format(value))
+            raise KeyError('Wrong type of {}'.format(self.name))
+            #super(PhoneField, PhoneField).value.__set__(self, value)
+
+
+class DateField(BaseField):
+    def __init__(self, required, nullable):
+        name = 'date'
+        super().__init__(required, nullable, name)
+
+    @property
+    def value(self):
+        return super().value
+    
+    @property 
+    def is_exist(self):
+        return super().is_exist
+    
+    @property
+    def is_valid(self):
+        return super().is_valid
+
+    @value.setter
+    def value(self, value):
+        lineformat = re.compile(r"""^(?P<day>([0-2][0-9]|(3)[0-1]))(\.|\/)(?P<month>(((0)[0-9])|((1)[0-2])))(\.|\/)(?P<year>\d{4})$""")
+        date = re.search(lineformat,value)
+        if date:
+            self._value = value
+        else:
+            self._is_wrong_type = True
+            logging.exception("Invalid date is provided")
+            raise KeyError('Wrong type of {}'.format(self.name))
+
+
+class BirthDayField(BaseField):
+    def __init__(self, required, nullable):
+        name = 'birthday'
+        super().__init__(required, nullable, name)
+
+    @property
+    def value(self):
+        return super().value
+    
+    @property 
+    def is_exist(self):
+        return super().is_exist
+    
+    @property
+    def is_valid(self):
+        return super().is_valid
 
     @value.setter
     def value(self, value):
         lineformat = re.compile(r"""^(?P<day>([0-2][0-9]|(3)[0-1]))(\.|\/)(?P<month>(((0)[0-9])|((1)[0-2])))(\.|\/)(?P<year>\d{4})$""")
         birthday = re.search(lineformat,value)
-        birthday_dict = birthday.groupdict()
+        if birthday:
+            birthday_dict = birthday.groupdict()
 
-        if (2020-int(birthday_dict['year']) > 70):
-            self._is_wrong_type = True
-            AttributeError("Birthday data is required")
-            logging.error("Invalid birthday is provided")
-        
-        else:
-            self._value = birthday
+            if (2020-int(birthday_dict['year']) < 70) or (len(birthday_dict) == 0):
+                self._is_wrong_type = True
+                logging.exception("Invalid birthday is provided")
+                raise KeyError('Wrong type of {}'.format(self.name))
+            
+            else:
+                self._value = birthday
 
 
-
-class GenderField(object):
-    def __init__(self,required, nullable):
-        self._value = None
-        self.required = required
-        self.nullable = nullable
-        self.name = 'gender'
-        self._is_wrong_type = False
-
+class GenderField(BaseField):
+    def __init__(self, required, nullable):
+        name = 'gender'
+        super().__init__(required, nullable, name)
 
     @property
     def value(self):
-        return self._value
-
+        return super().value
+    
     @property 
     def is_exist(self):
-        return self._value != None
-
+        return super().is_exist
+    
     @property
     def is_valid(self):
-        if ((not self.nullable) and (value == '')):
-            AttributeError("{} is nullable".format(self.name))
-            logging.error("{} nullable".format(self.name))
-            return False
-        
-        elif (self.required) and (value == None):
-            AttributeError("{} is required".format(self.name))
-            logging.error("{} is nullable".format(self.name))
-            return False
+        return super().is_valid
 
-        elif self._is_wrong_type:
-            return False
-        
-        else:
-            return True
-    
     @value.setter
     def value(self, value):
-        if (value > 1) or (value<0):
+        if (value not in [0,1]):
             self._is_wrong_type = True
-            logging.error("Invalid gender {} provided")
+            logging.exception("Invalid gender {} provided")
+            KeyError('Wrong type of {}'.format(self.name))
         else:
             self._value = value
 
 
-class ClientIDsField(object):
-    def __init__(self,required, nullable):
-        self._value = None
-        self._is_wrong_type = False
-        self.required = required
-        self.nullable = nullable
-        self.name = 'client_ids'
-    
+class ClientIDsField(BaseField):
+    def __init__(self, required, nullable):
+        name = 'client_ids'
+        super().__init__(required, nullable, name)
+
     @property
     def value(self):
-        return self._value
-
+        return super().value
+    
     @property 
     def is_exist(self):
-        return self._value == None
-
+        return super().is_exist
+    
     @property
     def is_valid(self):
-        if ((not self.nullable) and (value == '')):
-            AttributeError("{} is nullable".format(self.name))
-            logging.error("{} nullable".format(self.name))
-            return False
-        
-        elif (self.required) and (value == None):
-            AttributeError("{} is required".format(self.name))
-            logging.error("{} is nullable".format(self.name))
-            return False
-        
-        elif self._is_wrong_type:
-            return False
-        
-        else:
-            return True
-    
+        return super().is_valid
+
     @value.setter
-    def value(self, value):
-        if isinstance(value, list):
-            self._value = value
+    def value(self, value_list):
+        if isinstance(value_list, list) and (len(value_list) > 0) and (all(isinstance(x, int) for x in value_list)):
+            self._value = value_list
         else:
+            raise KeyError('Wrong type of {}'.format(self.name))
             self._is_wrong_type = True
-            logging.error("For ClientID list is required")
-
-
+            logging.exception("For ClientID list is required")
 
 
 class ClientsInterestsRequest(object):
@@ -375,14 +305,17 @@ class ClientsInterestsRequest(object):
     date = DateField(required=False, nullable=True)
     _code = OK
 
-    def __init__(self, argument):
+    def __init__(self, arguments):
+        self._try_init_argument(self.client_ids, arguments)
+        self._try_init_argument(self.date, arguments)
+
+
+    def _try_init_argument(self, field, arguments):
         try:
-            self.client_ids.value = argument['client_ids']
-            self.date._value = argument['date']
-        except Exception as e:
-            if self.client_ids.required or \
-            self.date.required:
-                logging.exception("Error: %s" % e)
+            field.value = arguments[field.name]
+        except KeyError as e:
+            if field.required:
+                logging.exception("Error {}".format(e))
                 self._code = INVALID_REQUEST
 
     @property
@@ -391,12 +324,17 @@ class ClientsInterestsRequest(object):
 
     @property
     def not_null_fileds(self):
-        fileds = [x.name for x in filter(lambda x: x.nullable==True,[self.client_ids, self.date])]
+        fileds = [x.name for x in filter(lambda x: x.is_exist==True,[self.client_ids, self.date])]
         return fileds
 
     @property
     def is_valid(self):
-        return True
+        return True if self.date.is_valid and self.client_ids.is_valid else False
+    
+    @property 
+    def num_clinets(self):
+        return len(self.client_ids.value)
+
 
     def get_interests(self):
         interests_dict = {}
@@ -404,7 +342,6 @@ class ClientsInterestsRequest(object):
             interests_dict[client] = get_interests(store=None, cid=client)
         
         return interests_dict
-
 
 
 class OnlineScoreRequest(object):
@@ -427,31 +364,30 @@ class OnlineScoreRequest(object):
     _code = OK
 
     def __init__(self, arguments):
-        try:
-            self.first_name.value = arguments['first_name']
-            self.last_name.value = arguments['last_name']
-            self.email.value = arguments['email']
-            self.phone.value = arguments['phone']
-            self.birthday.value = arguments['birthday']
-            self.gender.value = arguments['gender']
-        except Exception as e:
-            if self.first_name.required or \
-            self.last_name.required or \
-            self.email.required or \
-            self.phone.required or \
-            self.birthday.required or \
-            self.gender.required:
-                logging.exception("Error: %s" % e)
-                self._code = INVALID_REQUEST
+
+        self._try_init_argument(self.first_name, arguments)
+        self._try_init_argument(self.last_name, arguments)
+        self._try_init_argument(self.email, arguments)
+        self._try_init_argument(self.phone, arguments)
+        self._try_init_argument(self.birthday, arguments)
+        self._try_init_argument(self.gender, arguments)
 
     
+    def _try_init_argument(self, field, arguments):
+        try:
+            field.value = arguments[field.name]
+        except KeyError as e:
+            if field.required:
+                logging.exception("Error {}".format(e))
+                self._code = INVALID_REQUEST
+
     @property
     def code(self):
         return self._code
 
     @property
     def not_null_fileds(self):
-        fileds = [x.name for x in filter(lambda x: x.nullable==True,[self.first_name, self.last_name, self.email, self.phone, self.email, self.birthday, self.gender])]
+        fileds = [x.name for x in filter(lambda x: x.is_exist==True,[self.first_name, self.last_name, self.phone, self.email, self.birthday, self.gender])]
         return fileds
 
 
@@ -464,7 +400,7 @@ class OnlineScoreRequest(object):
                 logging.info('Valid')
                 return True
             else:
-                logging.error('Not valid')
+                logging.exception('Not valid')
                 return False
         else:
             return False
@@ -488,21 +424,19 @@ class MethodRequest(object):
     _not_null = None
     
     def __init__(self, request):
-        try:
-            self.account.value = request['account']
-            self.login.value = request['login']
-            self.token.value = request['token']
-            self.arguments.argument_dict = request['arguments'] 
-            self.method.value = request['method'] 
-        except Exception as e:
-            if self.account.required or \
-            self.login.required or \
-            self.token.required or \
-            self.arguments.required or \
-            self.method.required:    
-                logging.exception("Error: %s" % e)
-                self._code = INVALID_REQUEST
+        self._try_init_argument(self.account, request)
+        self._try_init_argument(self.token, request)
+        self._try_init_argument(self.login, request)
+        self._try_init_argument(self.arguments, request)
+        self._try_init_argument(self.method, request)
 
+    def _try_init_argument(self, field, request):
+        try:
+            field.value = request[field.name]
+        except KeyError as e:
+            if field.required:
+                logging.exception("Error {}".format(e))
+                self._code = INVALID_REQUEST
 
     @property
     def code(self):
@@ -513,21 +447,26 @@ class MethodRequest(object):
         return self._not_null
 
 
-    def send_request(self):
+    def send_request(self, ctx):
         if self.method.value == 'online_score':
-            online_score_request = OnlineScoreRequest(self.arguments.argument_dict)
+            online_score_request = OnlineScoreRequest(self.arguments.value)
             self._not_null = online_score_request.not_null_fileds
-            if (online_score_request.code == OK) and online_score_request.is_valid:
+            ctx['has'] = online_score_request.not_null_fileds
+            if self.is_admin:
+                return {'score': 42}
+            elif (online_score_request.code == OK) and online_score_request.is_valid:
                 score = online_score_request.get_score()
                 return {'score':score}
             else:
                 error = ERRORS[INVALID_REQUEST]
                 return {'error': error}
         elif self.method.value == 'clients_interests':
-            client_intersts_request = ClientsInterestsRequest(self.arguments.argument_dict)
+            client_intersts_request = ClientsInterestsRequest(self.arguments.value)
             self._not_null = client_intersts_request.not_null_fileds
+            ctx['has'] = client_intersts_request.not_null_fileds
             if (client_intersts_request.code == OK) and client_intersts_request.is_valid:
                 interests = client_intersts_request.get_interests()
+                ctx['nclients'] = client_intersts_request.num_clinets
                 return interests
             else:
                 error = ERRORS[INVALID_REQUEST]
@@ -538,13 +477,13 @@ class MethodRequest(object):
     
     @property
     def is_admin(self):
-        return self.login == ADMIN_LOGIN
+        return self.login.value == ADMIN_LOGIN
 
 
 
 def check_auth(request):
     if request.is_admin:
-        digest = hashlib.sha512(datetime.datetime.now().strftime("%Y%m%d%H") + ADMIN_SALT).hexdigest()
+        digest = hashlib.sha512((datetime.datetime.now().strftime("%Y%m%d%H") + ADMIN_SALT).encode('utf-8')).hexdigest()
     else:
         account = request.account.value if request.account.is_exist else ''
         digest = hashlib.sha512((request.account.value + request.login.value + SALT).encode('utf-8')).hexdigest()
@@ -564,7 +503,6 @@ def method_handler(request, ctx, store):
     '''
     
     method_request = MethodRequest(request['body'])
-    #method_request = MethodRequest({})
 
     if method_request.code == INVALID_REQUEST:
         return ERRORS[INVALID_REQUEST], method_request.code
@@ -574,8 +512,7 @@ def method_handler(request, ctx, store):
 
     else:
         #callback method - maybe
-        result = method_request.send_request()
-        ctx['has'] = method_request.not_null_fileds
+        result = method_request.send_request(ctx)
         code = INVALID_REQUEST if 'error' in result else OK
         response, code = result, code
         return response, code
