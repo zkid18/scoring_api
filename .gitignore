@@ -1,4 +1,5 @@
 *.sh
+*.pdf
 .DS_Store
 .huskyrc.json
 out
