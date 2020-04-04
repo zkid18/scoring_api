@@ -230,7 +230,6 @@ class OnlineScoreRequest(object):
     phone = PhoneField(required=False, nullable=True)
     birthday = BirthDayField(required=False, nullable=True)
     gender = GenderField(required=False, nullable=True)
-    _code = OK
 
     def __init__(self, arguments):
 
@@ -261,7 +260,6 @@ class MethodRequest(object):
     '''
     Required methods
     '''
-
     account = CharField(required=False, nullable=True)
     login = CharField(required=True, nullable=True)
     token = CharField(required=True, nullable=True)
@@ -344,9 +342,7 @@ def check_auth(request):
     if request.is_admin:
         digest = hashlib.sha512((datetime.datetime.now().strftime("%Y%m%d%H") + ADMIN_SALT).encode('utf-8')).hexdigest()
     else:
-        account = request.account if request.account else '' 
-        login = request.login if request.login else ''
-        digest = hashlib.sha512((account + login + SALT).encode('utf-8')).hexdigest()
+        digest = hashlib.sha512((request.account + request.login + SALT).encode('utf-8')).hexdigest()
     if digest == request.token:
         return True
     return False
