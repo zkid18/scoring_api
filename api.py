@@ -48,6 +48,8 @@ GENDERS = {
     FEMALE: "female",
 }
 
+VALIDATED_FIELD_OK = "OK"
+
 # Maybe we neeed to inherint from  class other than object
 # Can we step back from the template
 
@@ -78,7 +80,8 @@ class BaseField(object):
         '''
         Can be overwitten by child classes
         '''
-        return True
+        status_message = VALIDATED_FIELD_OK
+        return status_message
 
     def __set__(self, instance, value):
         '''
@@ -91,10 +94,12 @@ class BaseField(object):
             else:
                 pass
         else:
-            if self._validate_value(value):
+            status_message = self._validate_value(value)
+            if status_message == VALIDATED_FIELD_OK:
                 instance.__dict__[self.name] = value
             else:
-                raise TypeError('Wrong type of {0} {1}'.format(self.name, value))
+                raise TypeError('Wrong type of {0}; Error description: {2}; The value {1}'\
+                                .format(self.name, status_message, value))
 
 
 class CharField(BaseField):
@@ -106,7 +111,9 @@ class CharField(BaseField):
         super().__init__(required, nullable)
 
     def _validate_value(self, value):
-        return isinstance(value, str)
+        validated_field_wrong = 'Only strings are accepted'
+        valid_condition = isinstance(value, str)  
+        return VALIDATED_FIELD_OK if valid_condition else validated_field_wrong
     
 
 class ArgumentsField(BaseField):
@@ -134,7 +141,9 @@ class EmailField(CharField):
         '''
         * email - строка, в которой есть @, опционально, может быть пустым
         '''
-        return "@" in value
+        validated_field_wrong = 'The email field requires @'
+        valid_condition = '@' in value
+        return VALIDATED_FIELD_OK if valid_condition else validated_field_wrong
 
 
 class PhoneField(BaseField):
@@ -148,7 +157,9 @@ class PhoneField(BaseField):
         '''
         * phone - строка или число, длиной 11, начинается с 7, опционально, может быть пустым
         '''
-        return (len(str(value)) == 11) and (str(value)[0]) == '7'
+        validated_field_wrong = 'The phone field must start from 7 and contain 11 characters'
+        valid_condition = (len(str(value)) == 11) and (str(value)[0]) == '7'
+        return VALIDATED_FIELD_OK if valid_condition else validated_field_wrong
 
 
 class DateField(BaseField):
@@ -161,7 +172,9 @@ class DateField(BaseField):
         super().__init__(required, nullable)
 
     def _validate_value(self, value):
-        return re.search(self.lineformat, value) is not None
+        valid_condition = re.search(self.lineformat, value) is not None
+        validated_field_wrong = 'The date field format is dd.MM.Y'
+        return VALIDATED_FIELD_OK if valid_condition else validated_field_wrong
 
 
 class BirthDayField(BaseField):
@@ -175,10 +188,14 @@ class BirthDayField(BaseField):
 
     def _validate_value(self, value):
         birthday = re.search(self.lineformat, value)
+
         if birthday:
             birthday_dict = birthday.groupdict()
-            return (2020-int(birthday_dict['year']) < 70) or (len(birthday_dict) == 0)
+            valid_condition = (2020-int(birthday_dict['year']) < 70) or (len(birthday_dict) == 0)
+            validated_field_wrong = 'The birthday is maximum 70 years old'
+            return VALIDATED_FIELD_OK if valid_condition else validated_field_wrong
         else:
+            validated_field_wrong = 'The date field format is not dd.MM.Y'
             return False
 
 
@@ -193,7 +210,9 @@ class GenderField(BaseField):
         '''
         * gender - число 0, 1 или 2, опционально, может быть пустым
         '''
-        return isinstance(value, int) and (value in [0,1,2])
+        valid_condition = isinstance(value, int) and (value in [0,1,2])
+        validated_field_wrong = 'The birthday is maximum 70 years old'
+        return VALIDATED_FIELD_OK if valid_condition else validated_field_wrong
 
 
 class ClientIDsField(BaseField):
@@ -204,7 +223,17 @@ class ClientIDsField(BaseField):
         super().__init__(required, nullable)
 
     def _validate_value(self, value_list):
-        return isinstance(value_list, list) and (len(value_list) > 0) and (all(isinstance(x, int) for x in value_list))
+        if not isinstance(value_list, list):
+            validated_field_wrong = 'Input value is list'
+            return validated_field_wrong
+        elif len(value_list) == 0:
+            validated_field_wrong =  'List is empty'
+            return validated_field_wrong
+        elif not (all(isinstance(x, int) for x in value_list)):
+            validated_field_wrong =  'Only integrers id availbale'
+            return validated_field_wrong
+
+        return VALIDATED_FIELD_OK
 
 
 class ClientsInterestsRequest(object):
