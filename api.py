@@ -295,6 +295,11 @@ class MethodRequest(object):
     arguments = ArgumentsField(required=True, nullable=True)
     method = CharField(required=True, nullable=False)
 
+    handler_mappings = {
+        'clients_interests': handle_clients_interests,
+        'online_score': handle_online_score
+    }
+
     def __init__(self, request):
 
         self.account = request.get('account', None)
@@ -315,6 +320,53 @@ class MethodRequest(object):
                     pass
         return required_fields
 
+    def handle_online_score(self, ctx):
+        try:
+            online_score_request = OnlineScoreRequest(self.arguments)
+        except TypeError as type_error:
+            logging.exception("TypeError {}".format(type_error))
+            error = ERRORS[INVALID_REQUEST]
+            return {'error': error}
+        
+        clients_interests_field = [field.replace('_', '', 1) for field in online_score_request.__dict__]
+        required_fields = self._find_required_fields(OnlineScoreRequest)
+        ctx['has'] = clients_interests_field
+        
+        if self.is_admin:
+            return {'score': 42}
+        elif (len([field for field in required_fields if field not in clients_interests_field]) == 0) and online_score_request.is_valid:
+            score = online_score_request.get_score()
+            return {'score':score}
+        else:
+            error = ERRORS[INVALID_REQUEST]
+            return {'error': error}
+
+    def handle_clients_interests(self, ctx):
+        try:
+            client_intersts_request = ClientsInterestsRequest(self.arguments)
+        except TypeError as type_error:
+            logging.exception("TypeError {}".format(type_error))
+            error = ERRORS[INVALID_REQUEST]
+            return {'error': error}    
+        
+        clients_interests_field = [field.replace('_', '', 1) for field in client_intersts_request.__dict__]
+        required_fields = self._find_required_fields(ClientsInterestsRequest)
+        
+        if len([field for field in required_fields if field not in clients_interests_field]) == 0:
+            ctx['has'] = clients_interests_field
+            interests = client_intersts_request.get_interests()
+            ctx['nclients'] = len(client_intersts_request.client_ids)
+            return interests
+        else:
+            error = ERRORS[INVALID_REQUEST]
+            return {'error': error}
+
+    def handle_router(self, ctx):
+        try:
+            return self.handler_mappings[self.method](ctx)
+        except Exception:
+            error = ERRORS[INVALID_REQUEST]
+            return {'error': error}
 
     def send_request(self, ctx):
         if self.method == 'online_score':
@@ -386,22 +438,23 @@ def method_handler(request, ctx, store):
     * token - строка, обязательно, может быть пустым
     * arguments - словарь (объект в терминах json), обязательно, может быть пустым
     '''
+
     try:
         method_request = MethodRequest(request['body'])
+
+        if check_auth(method_request) is False:
+            return ERRORS[FORBIDDEN], FORBIDDEN
+
+        else:
+            result = method_request.handle_router(ctx)
+            code = INVALID_REQUEST if 'error' in result else OK
+            response, code = result, code
+            return response, code
+    
     except TypeError as type_error:
         logging.exception("TypeError {}".format(type_error))
         error = ERRORS[INVALID_REQUEST]
         return error, INVALID_REQUEST
-
-    if check_auth(method_request) is False:
-        return ERRORS[FORBIDDEN], FORBIDDEN
-
-    else:
-        result = method_request.send_request(ctx)
-        code = INVALID_REQUEST if 'error' in result else OK
-        response, code = result, code
-        return response, code
-
 
 class MainHTTPHandler(BaseHTTPRequestHandler):
     router = {
