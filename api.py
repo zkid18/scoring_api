@@ -295,10 +295,7 @@ class MethodRequest(object):
     arguments = ArgumentsField(required=True, nullable=True)
     method = CharField(required=True, nullable=False)
 
-    handler_mappings = {
-        'clients_interests': handle_clients_interests,
-        'online_score': handle_online_score
-    }
+    _HANDLER_PREFIX = 'handle_'
 
     def __init__(self, request):
 
@@ -307,6 +304,11 @@ class MethodRequest(object):
         self.token = request.get('token', None)
         self.arguments = request.get('arguments', None)
         self.method = request.get('method', None)
+
+        self.handler_mappings = {
+            'clients_interests': self.handle_clients_interests,
+            'online_score': self.handle_online_score
+        }
 
     def _find_required_fields(self, request):
         # required_fields
@@ -337,9 +339,6 @@ class MethodRequest(object):
         elif (len([field for field in required_fields if field not in clients_interests_field]) == 0) and online_score_request.is_valid:
             score = online_score_request.get_score()
             return {'score':score}
-        else:
-            error = ERRORS[INVALID_REQUEST]
-            return {'error': error}
 
     def handle_clients_interests(self, ctx):
         try:
@@ -357,13 +356,12 @@ class MethodRequest(object):
             interests = client_intersts_request.get_interests()
             ctx['nclients'] = len(client_intersts_request.client_ids)
             return interests
-        else:
-            error = ERRORS[INVALID_REQUEST]
-            return {'error': error}
 
     def handle_router(self, ctx):
         try:
-            return self.handler_mappings[self.method](ctx)
+            handle_name = self._HANDLER_PREFIX + self.method
+            handler = getattr(self, handle_name)
+            return handler(ctx)
         except Exception:
             error = ERRORS[INVALID_REQUEST]
             return {'error': error}
