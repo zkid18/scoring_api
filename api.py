@@ -98,7 +98,7 @@ class BaseField(object):
             if status_message == VALIDATED_FIELD_OK:
                 instance.__dict__[self.name] = value
             else:
-                raise TypeError('Wrong type of {0}; Error description: {2}; The value {1}'\
+                raise TypeError('Wrong type of {0}; Error description: {1}; The value {2}'\
                                 .format(self.name, status_message, value))
 
 
@@ -142,7 +142,7 @@ class EmailField(CharField):
         * email - строка, в которой есть @, опционально, может быть пустым
         '''
         validated_field_wrong = 'The email field requires @'
-        valid_condition = '@' in value
+        valid_condition = ('@' in value)
         return VALIDATED_FIELD_OK if valid_condition else validated_field_wrong
 
 
@@ -210,9 +210,13 @@ class GenderField(BaseField):
         '''
         * gender - число 0, 1 или 2, опционально, может быть пустым
         '''
-        valid_condition = isinstance(value, int) and (value in [0,1,2])
-        validated_field_wrong = 'The birthday is maximum 70 years old'
-        return VALIDATED_FIELD_OK if valid_condition else validated_field_wrong
+        if not isinstance(value, int):
+            validated_field_wrong = 'Integer are expected'
+            return validated_field_wrong
+        elif value not in [0,1,2]:
+            validated_field_wrong = 'Only value in the range [0,1,2] are accepted'
+            return validated_field_wrong
+        return VALIDATED_FIELD_OK
 
 
 class ClientIDsField(BaseField):
@@ -305,11 +309,6 @@ class MethodRequest(object):
         self.arguments = request.get('arguments', None)
         self.method = request.get('method', None)
 
-        self.handler_mappings = {
-            'clients_interests': self.handle_clients_interests,
-            'online_score': self.handle_online_score
-        }
-
     def _find_required_fields(self, request):
         # required_fields
         required_fields = []
@@ -366,52 +365,6 @@ class MethodRequest(object):
             error = ERRORS[INVALID_REQUEST]
             return {'error': error}
 
-    def send_request(self, ctx):
-        if self.method == 'online_score':
-            try:
-                online_score_request = OnlineScoreRequest(self.arguments)
-            except TypeError as type_error:
-                logging.exception("TypeError {}".format(type_error))
-                error = ERRORS[INVALID_REQUEST]
-                return {'error': error}
-            
-            clients_interests_field = [field.replace('_', '', 1) for field in online_score_request.__dict__]
-            required_fields = self._find_required_fields(OnlineScoreRequest)
-            ctx['has'] = clients_interests_field
-            
-            if self.is_admin:
-                return {'score': 42}
-            elif (len([field for field in required_fields if field not in clients_interests_field]) == 0) and online_score_request.is_valid:
-                score = online_score_request.get_score()
-                return {'score':score}
-            else:
-                error = ERRORS[INVALID_REQUEST]
-                return {'error': error}
-        
-        elif self.method == 'clients_interests':
-            try:
-                client_intersts_request = ClientsInterestsRequest(self.arguments)
-            except TypeError as type_error:
-                logging.exception("TypeError {}".format(type_error))
-                error = ERRORS[INVALID_REQUEST]
-                return {'error': error}    
-            
-            clients_interests_field = [field.replace('_', '', 1) for field in client_intersts_request.__dict__]
-            required_fields = self._find_required_fields(ClientsInterestsRequest)
-            
-            if len([field for field in required_fields if field not in clients_interests_field]) == 0:
-                ctx['has'] = clients_interests_field
-                interests = client_intersts_request.get_interests()
-                ctx['nclients'] = len(client_intersts_request.client_ids)
-                return interests
-            else:
-                error = ERRORS[INVALID_REQUEST]
-                return {'error': error}
-        
-        else:
-            error = ERRORS[INVALID_REQUEST]
-            return {'error': error}
-
     @property
     def is_admin(self):
         return self.login == ADMIN_LOGIN
@@ -453,6 +406,7 @@ def method_handler(request, ctx, store):
         logging.exception("TypeError {}".format(type_error))
         error = ERRORS[INVALID_REQUEST]
         return error, INVALID_REQUEST
+
 
 class MainHTTPHandler(BaseHTTPRequestHandler):
     router = {
