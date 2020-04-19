@@ -107,9 +107,6 @@ class CharField(BaseField):
     Char filed class - BaseField implemenation for Char fields
     '''
 
-    def __init__(self, required, nullable):
-        super().__init__(required, nullable)
-
     def _validate_value(self, value):
         validated_field_wrong = 'Only strings are accepted'
         valid_condition = isinstance(value, str)  
@@ -125,7 +122,6 @@ class ArgumentsField(BaseField):
         The __init__ method takes the following parameters:
         1. reuqired - Boolean value indicated that value is required
         2. nullable - Boolena value indicated that value can be nullable
-        3. name - String value for field name
         '''
         super().__init__(required, nullable)
 
@@ -134,8 +130,6 @@ class EmailField(CharField):
     '''
     Email Filed class - CharFiled class implemenation for email field
     '''
-    def __init__(self,required, nullable):
-        super().__init__(required, nullable)
 
     def _validate_value(self, value):
         '''
@@ -150,8 +144,6 @@ class PhoneField(BaseField):
     '''
     PhoneField class - BaseField implemenation for phone field
     '''
-    def __init__(self, required, nullable):
-        super().__init__(required, nullable)
 
     def _validate_value(self, value):
         '''
@@ -168,9 +160,6 @@ class DateField(BaseField):
     '''
     lineformat = re.compile(r"""^(?P<day>([0-2][0-9]|(3)[0-1]))(\.|\/)(?P<month>(((0)[0-9])|((1)[0-2])))(\.|\/)(?P<year>\d{4})$""")
 
-    def __init__(self, required, nullable):
-        super().__init__(required, nullable)
-
     def _validate_value(self, value):
         valid_condition = re.search(self.lineformat, value) is not None
         validated_field_wrong = 'The date field format is dd.MM.Y'
@@ -182,9 +171,6 @@ class BirthDayField(BaseField):
     BirthDayField class - BaseField implemenation for birthday field
     '''
     lineformat = re.compile(r"""^(?P<day>([0-2][0-9]|(3)[0-1]))(\.|\/)(?P<month>(((0)[0-9])|((1)[0-2])))(\.|\/)(?P<year>\d{4})$""")
-
-    def __init__(self, required, nullable):
-        super().__init__(required, nullable)
 
     def _validate_value(self, value):
         birthday = re.search(self.lineformat, value)
@@ -203,8 +189,6 @@ class GenderField(BaseField):
     '''
     GenderField class - BaseField implemenation for birthday field
     '''
-    def __init__(self, required, nullable):
-        super().__init__(required, nullable)
 
     def _validate_value(self, value):
         '''
@@ -223,8 +207,6 @@ class ClientIDsField(BaseField):
     '''
     GenderField class - BaseField implemenation for clientsID field
     '''
-    def __init__(self, required, nullable):
-        super().__init__(required, nullable)
 
     def _validate_value(self, value_list):
         if not isinstance(value_list, list):
