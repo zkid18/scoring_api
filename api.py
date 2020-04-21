@@ -48,11 +48,6 @@ GENDERS = {
     FEMALE: "female",
 }
 
-VALIDATED_FIELD_OK = "OK"
-
-# Maybe we neeed to inherint from  class other than object
-# Can we step back from the template
-
 
 class BaseField(object):
     '''
@@ -161,6 +156,7 @@ class BirthDayField(BaseField):
         else:
             validated_field_wrong = 'The date field format is not dd.MM.Y'
             raise TypeError(validated_field_wrong)
+
 
 class GenderField(BaseField):
     '''
@@ -279,8 +275,6 @@ class ClientsInterestsRequestHandler:
 
     def get_response(self, request, store, context):
         r = self.request_class(request.arguments)
-        # clients_interests_field = [field.replace('_', '', 1) for field in client_intersts_request.__dict__]
-        # required_fields = self._find_required_fields(ClientsInterestsRequest)
         if r.is_valid():
             logging.info("request is valid")
             interst_dict = {cid:get_interests(store, cid) for cid in r.client_ids}
@@ -289,12 +283,7 @@ class ClientsInterestsRequestHandler:
         else:
             logging.exception("request is invalid")
             return {'error': INVALID_REQUEST}
-        
-        # if len([field for field in required_fields if field not in clients_interests_field]) == 0:
-        #     ctx['has'] = clients_interests_field
-        #     interests = client_intersts_request.get_interests()
-        #     ctx['nclients'] = len(client_intersts_request.client_ids)
-        #     return interests
+
 
 class MethodRequest(RequestBase):
     '''
