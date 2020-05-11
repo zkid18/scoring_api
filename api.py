@@ -136,14 +136,15 @@ class DateField(BaseField):
     lineformat = re.compile(r"""^(?P<day>([0-2][0-9]|(3)[0-1]))(\.|\/)(?P<month>(((0)[0-9])|((1)[0-2])))(\.|\/)(?P<year>\d{4})$""")
 
     def validate_value(self, value):
-        valid_condition = re.search(self.lineformat, value) is not None
-        validated_field_wrong = 'The date field format is dd.MM.Y'
         super().validate_value(value)
-        if not valid_condition:
+        try:
+            d = datetime.datetime.strptime(value, "%d.%m.%Y")
+        except ValueError:
+            validated_field_wrong = 'The date field format is not dd.MM.Y'
             raise TypeError(validated_field_wrong)
 
 
-class BirthDayField(BaseField):
+class BirthDayField(DateField):
     '''
     BirthDayField class - BaseField implemenation for birthday field
     '''
@@ -152,16 +153,11 @@ class BirthDayField(BaseField):
     def validate_value(self, value):
         birthday = re.search(self.lineformat, value)
         super().validate_value(value)
-        if birthday:
-            birthday_dict = birthday.groupdict()
-            valid_condition = (2020-int(birthday_dict['year']) < 70) or (len(birthday_dict) == 0)
-            validated_field_wrong = 'The birthday is maximum 70 years old'
-            if not valid_condition:
-                raise TypeError(validated_field_wrong)           
-        else:
-            validated_field_wrong = 'The date field format is not dd.MM.Y'
-            raise TypeError(validated_field_wrong)
-
+        birthday_dict = birthday.groupdict()
+        valid_condition = (2020-int(birthday_dict['year']) < 70) or (len(birthday_dict) == 0)
+        validated_field_wrong = 'The birthday is maximum 70 years old'
+        if not valid_condition:
+            raise TypeError(validated_field_wrong)           
 
 class GenderField(BaseField):
     '''
