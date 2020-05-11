@@ -22,9 +22,8 @@ class TestField(unittest.TestCase):
     non_required_field = BaseField(required=False, nullable=False)
 
     def test_valid_values(self, value=DEFAULT_TEST_FIELD_VALUE):
-        if value != DEFAULT_TEST_FIELD_VALUE:
-            self.required_field.validate_value(value)
-            self.non_required_field.validate_value(value)
+        self.required_field.validate_value(value)
+        self.non_required_field.validate_value(value)
 
     def test_invalid_values(self, value=DEFAULT_TEST_FIELD_VALUE):
         if value != DEFAULT_TEST_FIELD_VALUE:
