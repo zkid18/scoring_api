@@ -333,10 +333,11 @@ def method_handler(request, ctx, store):
         if check_auth(method_request):
             handler = method_handler[method_request.method]()
             response = handler.get_response(method_request, store, ctx)
+            
             if 'error' not in response:
                 return response, OK
             else:
-                return ERRORS[INVALID_REQUEST], INVALID_REQUEST
+                return ERRORS.get(response['error'], "Unknown Error"), response['error']
         else:
             return ERRORS[FORBIDDEN], FORBIDDEN
     else:
