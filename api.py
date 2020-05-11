@@ -68,6 +68,11 @@ class BaseField(object):
     @abc.abstractclassmethod
     def validate_value(self, value):
         pass
+
+    def required_field_validation(self, value):
+        validated_field_wrong = 'Requred filed cant be None'
+        if self.required and value is None:
+            raise TypeError(validated_field_wrong)
     
 
 class CharField(BaseField):
@@ -217,9 +222,15 @@ class RequestBase(metaclass=RequestMeta):
 
     def validate(self):
         for name, field in self.fields.items():
-            value = self.request_body.get(name)            
-            if field.required and value is None:
-                self.req_errors_count += 1
+            value = self.request_body.get(name)
+            if value is None:
+                try:
+                    field.required_field_validation(value)
+                except TypeError as e:
+                    logging.exception(e)
+                    self.req_errors_count +=1        
+            # if field.required and value is None:
+            #     self.req_errors_count += 1
             elif value is not None:
                 try:
                     field.validate_value(value)

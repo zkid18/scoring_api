@@ -23,23 +23,20 @@ class TestField(unittest.TestCase):
 
     def test_valid_values(self, value=DEFAULT_TEST_FIELD_VALUE):
         if value != DEFAULT_TEST_FIELD_VALUE:
-            self.required_field = value
-            self.non_required_field = value
-            self.assertEqual(self.required_field, value)
-            self.assertEqual(self.non_required_field, value)
+            self.required_field.validate_value(value)
+            self.non_required_field.validate_value(value)
 
     def test_invalid_values(self, value=DEFAULT_TEST_FIELD_VALUE):
         if value != DEFAULT_TEST_FIELD_VALUE:
             with self.assertRaises(TypeError):
-                self.required_field = value
-                self.non_required_field = value
+                self.required_field.validate_value(value)
+                self.non_required_field.validate_value(value)
 
     @cases([None])
     def test_field_requirements(self, value):
         with self.assertRaises(TypeError):
-            self.required_field = value
-        self.non_required_field = value
-        self.assertEqual(self.non_required_field, value)
+            self.required_field.required_field_validation(value)
+        self.non_required_field.required_field_validation(value)
         
 
 class TestPhoneField(TestField):
