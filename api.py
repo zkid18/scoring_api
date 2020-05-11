@@ -133,12 +133,11 @@ class DateField(BaseField):
     '''
     DateField class - BaseField implemenation for dates field
     '''
-    lineformat = re.compile(r"""^(?P<day>([0-2][0-9]|(3)[0-1]))(\.|\/)(?P<month>(((0)[0-9])|((1)[0-2])))(\.|\/)(?P<year>\d{4})$""")
 
     def validate_value(self, value):
         super().validate_value(value)
         try:
-            d = datetime.datetime.strptime(value, "%d.%m.%Y")
+            self.date = datetime.datetime.strptime(value, "%d.%m.%Y")
         except ValueError:
             validated_field_wrong = 'The date field format is not dd.MM.Y'
             raise TypeError(validated_field_wrong)
@@ -148,13 +147,10 @@ class BirthDayField(DateField):
     '''
     BirthDayField class - BaseField implemenation for birthday field
     '''
-    lineformat = re.compile(r"""^(?P<day>([0-2][0-9]|(3)[0-1]))(\.|\/)(?P<month>(((0)[0-9])|((1)[0-2])))(\.|\/)(?P<year>\d{4})$""")
 
     def validate_value(self, value):
-        birthday = re.search(self.lineformat, value)
         super().validate_value(value)
-        birthday_dict = birthday.groupdict()
-        valid_condition = (2020-int(birthday_dict['year']) < 70) or (len(birthday_dict) == 0)
+        valid_condition = (2020-self.date.year < 70)
         validated_field_wrong = 'The birthday is maximum 70 years old'
         if not valid_condition:
             raise TypeError(validated_field_wrong)           
