@@ -12,7 +12,6 @@ import base64
 from optparse import OptionParser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from scoring import get_score, get_interests
-from store import RedisStore
 
 """
 A 422 status code occurs when a request is well-formed, 
@@ -222,8 +221,6 @@ class RequestBase(metaclass=RequestMeta):
                 except TypeError as e:
                     logging.exception(e)
                     self.req_errors_count +=1        
-            # if field.required and value is None:
-            #     self.req_errors_count += 1
             elif value is not None:
                 try:
                     field.validate_value(value)
@@ -262,20 +259,11 @@ class OnlineScoreRequest(RequestBase):
 class OnlineScoreRequestHandler:
     request_class = OnlineScoreRequest
 
-    def save_to_store(self, phone, email, birthday, gender, first_name, last_name):
-        store.set('phone', phone)
-        store.set('emila', email)
-        store.set('birthday', birthday)
-        store.set('gender', gender)
-        store.set('first_name', gender)
-        store.set('last_name', gender)
-
     def get_response(self, request, store, context):
         r = self.request_class(request.arguments)
         if request.is_admin:
             return {'score': 42}
         elif r.is_valid():
-            self.save_to_store(r.phone, r.email, r.birthday, r.gender, r.first_name, r.last_name)
             score = get_score(store, r.phone, r.email, r.birthday, r.gender, r.first_name, r.last_name)
             context['has'] = r.non_null_fields
             return {'score':score}
@@ -358,8 +346,7 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
     router = {
         "method": method_handler
     }
-    store = RedisStore('localhost', 6389)
-    store.connect()
+    store = None
 
 
     def get_request_id(self, headers):
