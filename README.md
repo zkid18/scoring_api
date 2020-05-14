@@ -5,7 +5,7 @@ Simple API for client scoring model. Mainly for practice OOP on Python.
 
 ### Prerequisites
 
-There are no external dependencies. But they might be added in the future.
+[Redis](https://redis.io/download) `6.0.1`
 
 
 ### Running the script

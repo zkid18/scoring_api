@@ -12,6 +12,7 @@ import base64
 from optparse import OptionParser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from scoring import get_score, get_interests
+from store import RedisStore
 
 """
 A 422 status code occurs when a request is well-formed, 
@@ -261,11 +262,20 @@ class OnlineScoreRequest(RequestBase):
 class OnlineScoreRequestHandler:
     request_class = OnlineScoreRequest
 
+    def save_to_store(self, phone, email, birthday, gender, first_name, last_name):
+        store.set('phone', phone)
+        store.set('emila', email)
+        store.set('birthday', birthday)
+        store.set('gender', gender)
+        store.set('first_name', gender)
+        store.set('last_name', gender)
+
     def get_response(self, request, store, context):
         r = self.request_class(request.arguments)
         if request.is_admin:
             return {'score': 42}
         elif r.is_valid():
+            self.save_to_store(r.phone, r.email, r.birthday, r.gender, r.first_name, r.last_name)
             score = get_score(store, r.phone, r.email, r.birthday, r.gender, r.first_name, r.last_name)
             context['has'] = r.non_null_fields
             return {'score':score}
@@ -279,7 +289,7 @@ class ClientsInterestsRequestHandler:
     def get_response(self, request, store, context):
         r = self.request_class(request.arguments)
         if r.is_valid():
-            logging.info("request is valid")
+            logging.debug("request is valid")
             interst_dict = {cid:get_interests(store, cid) for cid in r.client_ids}
             context['nclients'] = len(r.client_ids)
             return interst_dict
@@ -348,7 +358,9 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
     router = {
         "method": method_handler
     }
-    store = None
+    store = RedisStore('localhost', 6389)
+    store.connect()
+
 
     def get_request_id(self, headers):
         '''
