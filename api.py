@@ -351,7 +351,8 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
         "method": method_handler
     }
     store = Store(RedisStore(host=os.getenv('REDIS_HOST', 'localhost'), port=os.getenv('REDIS_PORT', 6379)))
-
+    store.connect()
+    
     def get_request_id(self, headers):
         '''
         Return random request_id that replicate the production
