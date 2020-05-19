@@ -13,7 +13,7 @@ import os
 from optparse import OptionParser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from scoring import get_score, get_interests
-from store import RedisStore
+from store import Store, RedisStore
 
 """
 A 422 status code occurs when a request is well-formed, 
@@ -350,8 +350,7 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
     router = {
         "method": method_handler
     }
-    store = RedisStore(host=os.getenv('REDIS_HOST', 'localhost')
-                        port=os.getenv('REDIS_PORT', 'localhost'))
+    store = Store(RedisStore(host=os.getenv('REDIS_HOST', 'localhost'), port=os.getenv('REDIS_PORT', 6379)))
 
     def get_request_id(self, headers):
         '''
