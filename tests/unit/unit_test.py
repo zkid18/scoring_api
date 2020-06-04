@@ -11,7 +11,10 @@ def cases(cases):
         def wrapper(*args):
             for c in cases:
                 new_args = args + (c if isinstance(c, tuple) else (c,))
-                f(*new_args)
+                try:
+                    f(*new_args)
+                except:
+                    print(f.__name__)
         return wrapper
     return decorator
 
