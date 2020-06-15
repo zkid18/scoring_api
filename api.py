@@ -330,6 +330,8 @@ def method_handler(request, ctx, store):
         'clients_interests': ClientsInterestsRequestHandler
     }
 
+    print("Store method handler", store==None)
+
     method_request = MethodRequest(request['body'])
     if method_request.is_valid():
         if check_auth(method_request):
@@ -351,7 +353,6 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
         "method": method_handler
     }
     store = Store(RedisStore(host=os.getenv('REDIS_HOST', 'localhost'), port=os.getenv('REDIS_PORT', 6379)))
-    store.connect()
     
     def get_request_id(self, headers):
         '''

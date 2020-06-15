@@ -25,23 +25,28 @@ class TestStore(unittest.TestCase):
     def test_redis_set_value(self):
         key = self.key + '_redis'
         self.assertTrue(self.redis_storage.set(key, self.value, 30))
-        self.assertEqual(self.store.get_cache(key), self.value)
+        self.assertEqual(self.store.cache_get(key), self.value)
 
-    def test_connection_error(self):
+    def test_redis_connection_error(self):
         self.redis_storage.client.get = MagicMock(side_effect=ConnectionError())
-        self.assertRaises(ConnectionError, self.store.get_cache, self.key)
+        self.assertRaises(ConnectionError, self.store.cache_get, self.key)
 
-    def test_store_set_value(self):
-        key = self.key + '_store'
+    def test_cache_set_value(self):
+        key = self.key + '_cache'
         self.assertTrue(self.store.cache_set(key, self.value, 30))
-        self.assertEqual(self.store.get_cache(key), self.value)
+        self.assertEqual(self.store.cache_get(key), self.value)
 
-    def test_store_connection_error(self):
+    def test_cache_connection_error(self):
         self.redis_storage.get = MagicMock(side_effect=ConnectionError())
         self.redis_storage.set = MagicMock(side_effect=ConnectionError())
 
-        self.assertRaises(ConnectionError, self.store.get_cache ,self.key)
+        self.assertRaises(ConnectionError, self.store.cache_get ,self.key)
         self.assertRaises(ConnectionError, self.store.cache_set ,self.key, self.value)
+
+    def test_store_set_value(self):
+        key = self.key + '_store'
+        self.assertTrue(self.store.set(key, self.value, 30))
+        self.assertEqual(self.store.get(key), self.value)
 
 
 if __name__ == "__main__":
