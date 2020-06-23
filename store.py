@@ -47,41 +47,41 @@ class RedisStore:
         try:
             return self.client.set(key, value, ex=seconds)
         except redis.RedisError:
-            raise ConnectionError
-
+            raise ConnectionError    
 
 class Store:
     MAX_ATTEMPS = 10
 
     def __init__(self, store):
-        self.storage = store
+        self.cache_storage = store
+        self.key_value_storage = store
 
-    def ping(self):
-        return self.storage.ping()
+    def ping_cache(self):
+        return self.cache_storage.ping()
 
-    def connect(self):
-        return self.storage.connect()
+    def connect_cache(self):
+        return self.cache_storage.connect()
     
     @try_connection(MAX_ATTEMPS)
     def cache_get(self, key):
         '''
         Communication with client-server cache stoarage (i.e. memcache, tarantool, redis)
         '''
-        return self.storage.get(key)
+        return self.cache_storage.get(key)
     
     @try_connection(MAX_ATTEMPS)
     def get(self, key):
         '''
         Communication with separate key-value stoarage (i.e nosql)
         '''
-        return self.storage.get(key)
+        return self.key_value_storage.get(key)
 
     @try_connection(MAX_ATTEMPS)
     def set(self, key, score, seconds=60*60):
         '''
         Communication with separate key-value stoarage (i.e nosql)
         '''
-        return self.storage.set(key, score, seconds)
+        return self.cache_storage.set(key, score, seconds)
 
     @try_connection(MAX_ATTEMPS)
     def cache_set(self, key, score, seconds=60*60):
