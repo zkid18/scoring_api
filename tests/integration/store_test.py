@@ -1,6 +1,5 @@
 import os
 import unittest
-from unittest.mock import MagicMock
 
 from store import Store, RedisStore
 
@@ -28,7 +27,7 @@ class TestStore(unittest.TestCase):
         self.assertEqual(self.store.cache_get(key), self.value)
 
     def test_redis_connection_error(self):
-        self.redis_storage.client.get = MagicMock(side_effect=ConnectionError())
+        self.redis_storage.client.disconnect()
         self.assertRaises(ConnectionError, self.store.cache_get, self.key)
 
     def test_cache_set_value(self):
@@ -37,8 +36,7 @@ class TestStore(unittest.TestCase):
         self.assertEqual(self.store.cache_get(key), self.value)
 
     def test_cache_connection_error(self):
-        self.redis_storage.get = MagicMock(side_effect=ConnectionError())
-        self.redis_storage.set = MagicMock(side_effect=ConnectionError())
+        self.redis_storage.client.disconnect()
 
         self.assertRaises(ConnectionError, self.store.cache_get ,self.key)
         self.assertRaises(ConnectionError, self.store.cache_set ,self.key, self.value)
