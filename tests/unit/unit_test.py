@@ -11,7 +11,10 @@ def cases(cases):
         def wrapper(*args):
             for c in cases:
                 new_args = args + (c if isinstance(c, tuple) else (c,))
-                f(*new_args)
+                try:
+                    f(*new_args)
+                except:
+                    print(f.__name__)
         return wrapper
     return decorator
 
@@ -22,24 +25,25 @@ class TestField(unittest.TestCase):
     non_required_field = BaseField(required=False, nullable=False)
 
     def test_valid_values(self, value=DEFAULT_TEST_FIELD_VALUE):
-        if value != DEFAULT_TEST_FIELD_VALUE:
-            self.required_field = value
-            self.non_required_field = value
-            self.assertEqual(self.required_field, value)
-            self.assertEqual(self.non_required_field, value)
+        raised = False
+        try:
+            self.required_field.validate_value(value)
+            self.non_required_field.validate_value(value)
+        except:
+            raised = True
+        self.assertFalse(raised)
 
     def test_invalid_values(self, value=DEFAULT_TEST_FIELD_VALUE):
         if value != DEFAULT_TEST_FIELD_VALUE:
             with self.assertRaises(TypeError):
-                self.required_field = value
-                self.non_required_field = value
+                self.required_field.validate_value(value)
+                self.non_required_field.validate_value(value)
 
     @cases([None])
     def test_field_requirements(self, value):
         with self.assertRaises(TypeError):
-            self.required_field = value
-        self.non_required_field = value
-        self.assertEqual(self.non_required_field, value)
+            self.required_field.required_field_validation(value)
+        self.non_required_field.required_field_validation(value)
         
 
 class TestPhoneField(TestField):

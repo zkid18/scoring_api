@@ -21,7 +21,9 @@ python3 api.py
 To run test
 
 ```
-python3 -m unittest test.py
+python3 -m unittest tests/unit/unit_test.py 
+python3 -m unittest tests/integration/api_test.py 
+python3 -m unittest tests/integration/store_test.py 
 ```
 
 
